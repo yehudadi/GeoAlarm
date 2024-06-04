@@ -1,0 +1,23 @@
+@startuml
+
+
+
+
+
+
+class com.example.myapplication.MyViewHolder {
+~ ImageButton moreButton
+~ Button startBtn
+~ TextView nameView
+~ Context context
+}
+
+
+
+
+
+com.example.myapplication.ViewHolder <|-- com.example.myapplication.MyViewHolder
+com.example.myapplication.Adapter <|-- com.example.myapplication.MyAdaptor
+com.example.myapplication.rvInterface <|.. com.example.myapplication.MainActivity
+androidx.appcompat.app.AppCompatActivity <|-- com.example.myapplication.MainActivity
+@enduml

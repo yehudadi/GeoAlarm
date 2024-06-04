@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="black">#FF000000</color>
+    <color name="white">#FFFFFFFF</color>
+    <color name="orange">#BC6E09</color>
+    <color name="cool">#EA5386</color>
+
+    <color name="colorPrimary">#3F51B5</color>
+    <color name="colorPrimaryDark">#303F9F</color>
+    <color name="colorAccent">#FF4081</color>
+
+    <color name="darkColorPrimary">#303F9F</color>
+    <color name="darkColorPrimaryDark">#212121</color>
+    <color name="darkColorAccent">#FF4081</color>
+
+    <!-- Additional Popular Colors -->
+    <color name="red">#FF0000</color>
+    <color name="green">#00FF00</color>
+    <color name="blue">#2C2CAC</color>
+    <color name="yellow">#FFFF00</color>
+    <color name="purple">#800080</color>
+    <color name="pink">#FFC0CB</color>
+    <color name="teal">#008080</color>
+    <color name="cyan">#00FFFF</color>
+    <color name="amber">#FFC107</color>
+    <color name="lime">#00FF00</color>
+</resources>
