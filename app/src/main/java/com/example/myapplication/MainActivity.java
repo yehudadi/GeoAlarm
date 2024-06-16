@@ -1,23 +1,21 @@
 package com.example.myapplication;
 
 import android.app.AlertDialog;
-import android.app.Dialog;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.location.Address;
 import android.location.Geocoder;
 import android.os.Bundle;
 import android.view.View;
-import android.widget.AdapterView;
-import android.widget.ArrayAdapter;
-import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageButton;
-import android.widget.Spinner;
 import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.app.ActivityCompat;
+import androidx.core.content.ContextCompat;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
@@ -29,12 +27,13 @@ import java.util.Locale;
 
 public class MainActivity extends AppCompatActivity implements rvInterface {
 
-    static String COORDINATED_TAG = "COORDINATED_TAG";
     final static String DISTANCE_TAG = "DISTANCE_TAG";
-    private FloatingActionButton addBtn;
+    private static final int PERMISSION_REQUEST_CODE = 699;
+    static String COORDINATED_TAG = "COORDINATED_TAG";
     static DBHelper DB;
     static String address = "";
     static Geocoder geocoder;
+    private FloatingActionButton addBtn;
     private ImageButton settBtn;
     private ArrayList<Item> Items;
     private MyAdaptor adaptor;
@@ -42,6 +41,31 @@ public class MainActivity extends AppCompatActivity implements rvInterface {
 
     private SharedPref sharedPreferences;
 
+    public static String[] extractAddressAndCoordinates(EditText editLocation) {
+        String x, y;
+        List<Address> coordinatesOfAddress;
+
+        address = String.valueOf(editLocation.getText());
+        try {
+            coordinatesOfAddress = geocoder.getFromLocationName(String.valueOf(editLocation.getText()), 1);
+        } catch (Exception e) {
+            return new String[]{"0", "0"};
+        }
+
+        if (notFound(coordinatesOfAddress)) {
+            return new String[]{"0", "0"};
+        }
+
+        x = String.valueOf(coordinatesOfAddress.get(0).getLatitude());
+        y = String.valueOf(coordinatesOfAddress.get(0).getLongitude());
+
+        return new String[]{x, y};
+
+    }
+
+    private static boolean notFound(List<Address> list) {
+        return list.size() == 0;
+    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -59,7 +83,7 @@ public class MainActivity extends AppCompatActivity implements rvInterface {
         Items = DB.selectAllItems();
 
         sharedPreferences = new SharedPref(this);
-        DarkModeManager.setDarkMode(sharedPreferences.read(SharedPref.DARK_MODE,true),sharedPreferences);
+        DarkModeManager.setDarkMode(sharedPreferences.read(SharedPref.DARK_MODE, true), sharedPreferences);
 
         recyclerView.setLayoutManager(new LinearLayoutManager(this));
         adaptor = new MyAdaptor(this, Items, this);
@@ -69,7 +93,7 @@ public class MainActivity extends AppCompatActivity implements rvInterface {
         addBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                CostumeDialog customDialog = new CostumeDialog(MainActivity.this,null,-1);
+                CostumeDialog customDialog = new CostumeDialog(MainActivity.this, null, -1);
                 customDialog.show();
 
             }
@@ -82,6 +106,48 @@ public class MainActivity extends AppCompatActivity implements rvInterface {
             }
         });
 
+        checkAndAskAllPermissions();
+    }
+
+    private void checkAndAskAllPermissions() {
+        List<String> permissionsToAsk = new ArrayList<>();
+
+        // Add all permissions declared in the manifest to the list
+        String[] permissions = {
+                "android.permission.ACCESS_COARSE_LOCATION",
+                "android.permission.ACCESS_FINE_LOCATION",
+                "android.permission.INTERNET",
+                "android.permission.WRITE_EXTERNAL_STORAGE",
+                "android.permission.READ_EXTERNAL_STORAGE",
+                "android.permission.MANAGE_EXTERNAL_STORAGE",
+                "android.permission.ACCESS_BACKGROUND_LOCATION",
+                "android.permission.WAKE_LOCK",
+                "android.permission.VIBRATE",
+                "android.permission.SET_ALARM",
+                "com.android.alarm.permission.SET_ALARM", // Custom permission
+                "android.permission.RECEIVE_BOOT_COMPLETED",
+                "android.permission.FOREGROUND_SERVICE",
+                "android.permission.FOREGROUND_SERVICE_DATA_SYNC" // Custom permission
+                // Add more permissions as needed
+        };
+
+        for (String permission : permissions) {
+            if (ContextCompat.checkSelfPermission(this, permission)
+                    != PackageManager.PERMISSION_GRANTED) {
+                // Permission is not granted
+                permissionsToAsk.add(permission);
+            }
+        }
+
+        if (!permissionsToAsk.isEmpty()) {
+            // Convert the list to an array and request permissions
+            ActivityCompat.requestPermissions(this,
+                    permissionsToAsk.toArray(new String[0]),
+                    PERMISSION_REQUEST_CODE);
+        } else {
+            // All permissions have already been granted
+            // Proceed with your app logic
+        }
     }
 
 
@@ -133,37 +199,9 @@ public class MainActivity extends AppCompatActivity implements rvInterface {
         alertDialog.show();
     }
 
-
     private void deletItem(Long id) {
         DB.deleteItem(id);
         recreate();
-    }
-
-    public static String[] extractAddressAndCoordinates(EditText editLocation) {
-        String x, y;
-        List<Address> coordinatesOfAddress;
-
-        address = String.valueOf(editLocation.getText());
-        try {
-            coordinatesOfAddress = geocoder.getFromLocationName(String.valueOf(editLocation.getText()), 1);
-        } catch (Exception e) {
-            return new String[]{"0", "0"};
-        }
-
-        if (notFound(coordinatesOfAddress)) {
-            return new String[]{"0", "0"};
-        }
-
-        x = String.valueOf(coordinatesOfAddress.get(0).getLatitude());
-        y = String.valueOf(coordinatesOfAddress.get(0).getLongitude());
-
-        return new String[]{x, y};
-
-    }
-
-
-    private static boolean notFound(List<Address> list) {
-        return list.size() == 0;
     }
 
 }

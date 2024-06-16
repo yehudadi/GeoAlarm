@@ -18,28 +18,25 @@ import android.widget.Toast;
 import androidx.annotation.Nullable;
 import androidx.core.app.ActivityCompat;
 import androidx.core.app.NotificationCompat;
+import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 
 import java.util.Objects;
 
 public class AppService extends Service {
 
+    public static final String START_TRACKING = "START_TRACKING";
+    private static final String NOTIFICATION_CHANNEL_ID = "location_service_channel";
+    private static final int NOTIFICATION_ID = 9999;
+    static String COORDINATED_TAG = "COORDINATED_TAG";
+    static String DISTANCE_TAG = "DISTANCE_TAG";
     boolean stopSelf = false;
-
     String destLatitude;
     String destLongitude;
     int distanceAlert;
     LocationFinder locationFinder;
     Context context;
-
     boolean notificationActive = false;
-
     NotificationManager notificationManager;
-
-    private static final String NOTIFICATION_CHANNEL_ID = "location_service_channel";
-    private static final int NOTIFICATION_ID = 9999;
-    public static final String START_TRACKING = "START_TRACKING";
-    static String COORDINATED_TAG = "COORDINATED_TAG";
-    static String DISTANCE_TAG = "DISTANCE_TAG";
 
     private void createNotificationChannel() {
         notificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
@@ -83,7 +80,7 @@ public class AppService extends Service {
             case START_TRACKING:
                 String[] coordinates = getDestination(intent);
                 int distance = getDistanceAlert(intent);
-
+                Log.d("debuging", "cor: " + coordinates[0] + " |  " + coordinates[1] + "  | dist:" + distance);
                 startLocationLoop(this, new LocationFinder(coordinates[1], coordinates[0], this), distance);
                 break;
 
@@ -138,19 +135,18 @@ public class AppService extends Service {
         locationFinder = locFinder;
         Thread tr = new Thread(() -> {
             boolean hasArived = false;
-            Looper.prepare();
-            Intent distanceBroadcastIntent = new Intent("com.example.locationalarm.distance");
-            Intent arrivalBroadcastIntent = new Intent("com.example.locationalarm.hasArrived");
 
-            locationFinder.getLocation(); // saves new location in the LocationFinder object
-            int distance = locationFinder.getDistanceFromUserToDestination();
+            Intent distanceBroadcastIntent = new Intent("com.example.locationalarm.distance");
+//            Intent arrivalBroadcastIntent = new Intent("com.example.locationalarm.hasArrived");
+
+
+            int distance = 0;
 
             while (!stopSelf) {
                 locationFinder.getLocation(); // saves new location in the LocationFinder object
                 distance = locationFinder.getDistanceFromUserToDestination();
-                distanceBroadcastIntent.putExtra("distance", distance);
-                sendBroadcast(distanceBroadcastIntent);
                 String message;
+
 
                 if (distanceAlert >= distance) {
                     // Stop service
@@ -158,8 +154,8 @@ public class AppService extends Service {
                     hasArived = true;
                     locationFinder.stopLocationUpdates();
 
-                    arrivalBroadcastIntent.putExtra("hasArrived", true);
-                    sendBroadcast(arrivalBroadcastIntent);
+//                    arrivalBroadcastIntent.putExtra("hasArrived", true);
+//                    sendBroadcast(arrivalBroadcastIntent);
                     message = "Distance: " + distance + " meters\nYou are close to your destination.";
                 } else {
                     message = "Distance: " + distance + " meters";
@@ -171,7 +167,10 @@ public class AppService extends Service {
                     showNotification(message);
                 }
 
-                Log.d("Location Update", "Distance from destination: " + distance + " meters");
+                distanceBroadcastIntent.putExtra("distance", distance);
+//                sendBroadcast(distanceBroadcastIntent);
+                LocalBroadcastManager.getInstance(context).sendBroadcast(distanceBroadcastIntent);
+                Log.d("debuging", "Distance from destination: " + distance + " meters");
 
                 // Sleep for 5 seconds
                 try {
@@ -184,7 +183,7 @@ public class AppService extends Service {
                 }
             }
             // start alarm
-            if (hasArived){
+            if (hasArived) {
                 Toast.makeText(getApplicationContext(), "You have arrived", Toast.LENGTH_LONG).show();
 
                 Toast.makeText(context, "Play something!!", Toast.LENGTH_SHORT).show();

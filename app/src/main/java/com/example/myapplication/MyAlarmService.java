@@ -1,36 +1,24 @@
 package com.example.myapplication;
 
-import android.app.Service;
-
-import android.content.Context;
-import android.content.Intent;
-import android.media.MediaPlayer;
-import android.os.Handler;
-import android.os.IBinder;
-import android.os.Vibrator;
-import android.provider.AlarmClock;
-import android.util.Log;
-import android.widget.Toast;
 import android.app.Notification;
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
-import android.content.Context;
+import android.app.Service;
+import android.content.Intent;
 import android.os.Build;
-import androidx.core.app.NotificationCompat;
+import android.os.Handler;
+import android.os.IBinder;
+import android.provider.AlarmClock;
+import android.widget.Toast;
 
 import androidx.annotation.Nullable;
 import androidx.core.app.NotificationCompat;
 
-import com.example.myapplication.R;
-
 public class MyAlarmService extends Service {
 
+    private final int INTERVAL = 1000; // 1 second
     private Handler handler;
     private Runnable runnable;
-    private final int INTERVAL = 1000; // 1 second
-
-
-
 
     @Override
     public void onCreate() {
@@ -48,8 +36,7 @@ public class MyAlarmService extends Service {
                 try {
                     getApplicationContext().startActivity(alarm);
 
-                }
-                catch (Exception e) {
+                } catch (Exception e) {
                     System.out.println("Error: " + e.getMessage());
                     Toast.makeText(getApplicationContext(), "No alarm app found", Toast.LENGTH_LONG).show();
                 }

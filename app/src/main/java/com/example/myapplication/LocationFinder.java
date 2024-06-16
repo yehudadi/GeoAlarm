@@ -25,22 +25,18 @@ import java.util.List;
 import java.util.Locale;
 
 public class LocationFinder extends ActivityCompat {
+    Context context;
     private int UPDATE_INTERVAL = 1000 * 5; // 2 seconds
-
     // Of user
     private String latitude = "0";
     private String longitude = "0";
-
     // Destination location
     private String destLatitude;
     private String destLongitude;
-
     private FusedLocationProviderClient fusedLocationClient;
     private LocationRequest locationRequest;
     private LocationCallback locationCallback;
     private Geocoder geocoder;
-
-    Context context;
 
     @SuppressLint("MissingPermission")
     public LocationFinder(String destLongitude, String destLatitude, Context context) { // class for getting phones location

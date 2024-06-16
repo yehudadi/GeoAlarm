@@ -5,14 +5,16 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.os.Build;
 import android.os.Bundle;
+import android.util.Log;
 import android.widget.Button;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AppCompatActivity;
-
-import com.google.android.material.button.MaterialButton;
+import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 
 import java.util.Timer;
 import java.util.TimerTask;
@@ -23,22 +25,18 @@ public class ActiveTracking extends AppCompatActivity {
     int distanceAlert;
 
     Timer timer = new Timer();
-
-    private int distance;
-    private long time = 0;
-    private String destination;
-
-    private BroadcastReceiver timeBroadcastReceiver;
-    private BroadcastReceiver distanceBroadcastReceiver;
-
     Button stopTracking;
-
     TextView destinationTextView;
     TextView distanceTextView;
     TextView timeTextView;
-
+    private int distance;
+    private long time = 0;
+    private String destination;
+    private BroadcastReceiver timeBroadcastReceiver;
+    private BroadcastReceiver distanceBroadcastReceiver;
     private Intent broadcastIntent = new Intent("com.example.locationalarm.time");
     private Intent locationIntent;
+    private boolean arrived = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -48,24 +46,23 @@ public class ActiveTracking extends AppCompatActivity {
         // get extras and init variables
         destination = intent.getStringExtra("name");
         coordinates = intent.getStringExtra(MainActivity.COORDINATED_TAG);
-        distanceAlert = intent.getIntExtra("DISTANCE_TAG",100);
+        distanceAlert = intent.getIntExtra("DISTANCE_TAG", 100);
 
         initViews();
         startTimeUpdater();
-        /*startDistanceUpdater();
-        stopServicesListener();
+        startDistanceUpdater();
+        initializeStopServicesBroadcast();
 
         Functions.checkLocationActive(this);
 
 
-       /* locationIntent = new Intent(getApplicationContext(), AppService.class);
+        locationIntent = new Intent(getApplicationContext(), AppService.class);
         locationIntent.setAction(AppService.START_TRACKING);
 
         locationIntent.putExtra(MainActivity.COORDINATED_TAG, coordinates);
         locationIntent.putExtra(MainActivity.DISTANCE_TAG, distanceAlert);
-        startService(locationIntent);*/
+        startService(locationIntent);
     }
-
     private void initViews() {
         destinationTextView = findViewById(R.id.locationName);
         distanceTextView = findViewById(R.id.selctedDistanceName);
@@ -94,44 +91,49 @@ public class ActiveTracking extends AppCompatActivity {
 
     }
 
-    public void stopServicesListener() {
-        IntentFilter intentFilter = new IntentFilter("com.example.locationalarm.hasArrived");
-        timeBroadcastReceiver = new BroadcastReceiver() {
-            @Override
-            public void onReceive(android.content.Context context, Intent intent) {
-                timer.cancel();
-                stopService(locationIntent);
-                Toast.makeText(getApplicationContext(), "You have arrived", Toast.LENGTH_LONG).show();
-                Context cont = getApplicationContext();
-                finish();
-            }
-        };
-        registerReceiver(timeBroadcastReceiver, intentFilter);
+    public void initializeStopServicesBroadcast() {
+//        IntentFilter intentFilter = new IntentFilter("com.example.locationalarm.hasArrived");
+//        timeBroadcastReceiver = new BroadcastReceiver() {
+//            @Override
+//            public void onReceive(Context context, Intent intent) {
+//                timer.cancel();
+//                stopService(locationIntent);
+//                Toast.makeText(getApplicationContext(), "You have arrived", Toast.LENGTH_LONG).show();
+//                Context cont = getApplicationContext();
+//                arrived = true;
+//                finish();
+//            }
+//        };
+//        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+//            registerReceiver(timeBroadcastReceiver, intentFilter, Context.RECEIVER_NOT_EXPORTED);
+//        }
     }
 
     public void startTimeUpdater() {
-        IntentFilter intentFilter = new IntentFilter("com.example.locationalarm.time");
-        timeBroadcastReceiver = new BroadcastReceiver() {
-            @SuppressLint("SetTextI18n")
-            @Override
-            public void onReceive(android.content.Context context, Intent intent) {
+        new Thread(() -> {
+            while (!arrived) {
                 updateTimeText();
+                try {
+                    Thread.sleep(1000);
+                } catch (Exception ignored) {
+                }
             }
-        };
-        registerReceiver(timeBroadcastReceiver, intentFilter);
+        }).start();
     }
 
     public void startDistanceUpdater() {
         IntentFilter intentFilter = new IntentFilter("com.example.locationalarm.distance");
         distanceBroadcastReceiver = new BroadcastReceiver() {
-            @SuppressLint("SetTextI18n")
             @Override
-            public void onReceive(android.content.Context context, Intent intent) {
+            public void onReceive(Context context, Intent intent) {
+                Log.d("debuging", "dist recieved: " + distance);
                 distance = intent.getIntExtra("distance", 0);
                 updateDistanceText(distance);
             }
         };
-        registerReceiver(distanceBroadcastReceiver, intentFilter);
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            LocalBroadcastManager.getInstance(getApplicationContext()).registerReceiver(distanceBroadcastReceiver, intentFilter);
+        }
     }
 
     public void updateDistanceText(int distance) {
@@ -169,7 +171,9 @@ public class ActiveTracking extends AppCompatActivity {
         time_formated = str_hours + ":" + str_minutes + ":" + str_seconds;
 
 
-        timeTextView.setText("Active time: " + time_formated);
+        runOnUiThread(() -> {
+            timeTextView.setText("Active time: " + time_formated);
+        });
     }
 
 }

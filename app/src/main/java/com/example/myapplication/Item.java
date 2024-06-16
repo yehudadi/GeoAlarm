@@ -34,22 +34,39 @@ public class Item {
     public void setDistance(String distance) {
         this.distance = distance;
     }
+
     public Long getId() {
         return id;
     }
+
     public void setId(Long id) {
         this.id = id;
     }
-    public String getLatitude() {return latitude;}
-    public void setLatitude(String latitude) {this.latitude = latitude;}
 
-    public String getLongitude() {return longitude;}
+    public String getLatitude() {
+        return latitude;
+    }
 
-    public void setLongitude(String longitude) {this.longitude = longitude;}
+    public void setLatitude(String latitude) {
+        this.latitude = latitude;
+    }
 
-    public String getAdress() {return adress;}
+    public String getLongitude() {
+        return longitude;
+    }
 
-    public void setAdress(String adress) {this.adress = adress;}
+    public void setLongitude(String longitude) {
+        this.longitude = longitude;
+    }
+
+    public String getAdress() {
+        return adress;
+    }
+
+    public void setAdress(String adress) {
+        this.adress = adress;
+    }
+
     public int getParseDistance() {
         String number = this.distance.replaceAll("[^0-9]", ""); // Remove non-numeric characters
         return Integer.parseInt(number);

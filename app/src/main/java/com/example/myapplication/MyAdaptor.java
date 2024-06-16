@@ -8,7 +8,6 @@ import android.view.LayoutInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.ImageButton;
 import android.widget.PopupMenu;
 import android.widget.Toast;
 
@@ -18,11 +17,9 @@ import androidx.recyclerview.widget.RecyclerView;
 import java.util.List;
 
 public class MyAdaptor extends RecyclerView.Adapter<MyViewHolder> {
-    Context context;
-
-    List<Item> Items;
-
     private final rvInterface rvInterface;
+    Context context;
+    List<Item> Items;
 
 
     public MyAdaptor(Context context, List<Item> Items, rvInterface rvInterface) {
@@ -78,7 +75,7 @@ public class MyAdaptor extends RecyclerView.Adapter<MyViewHolder> {
                             Items.get(pos).getId() + 1, Items.get(pos).getLatitude(), Items.get(pos).getLongitude());
                     DB1.insertItem(item1);
 
-                    Items.add(pos+1,item1);
+                    Items.add(pos + 1, item1);
 
                     notifyItemInserted(pos + 1);
 
@@ -97,7 +94,7 @@ public class MyAdaptor extends RecyclerView.Adapter<MyViewHolder> {
                     return true;
                 } else if (itemId == R.id.menu_edit) {
 
-                    CostumeDialog customDialog = new CostumeDialog(context, Items.get(pos) ,pos); // 'this' refers to the current activity
+                    CostumeDialog customDialog = new CostumeDialog(context, Items.get(pos), pos); // 'this' refers to the current activity
                     customDialog.show();
 
                     Toast.makeText(context, "Edit clicked", Toast.LENGTH_SHORT).show();

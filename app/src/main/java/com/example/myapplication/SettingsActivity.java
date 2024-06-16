@@ -1,6 +1,5 @@
 package com.example.myapplication;
 
-import static com.example.myapplication.DarkModeManager.IS_DARK_MODE_ON;
 import static com.example.myapplication.DarkModeManager.setDarkMode;
 import static com.example.myapplication.SharedPref.DARK_MODE;
 
@@ -13,11 +12,9 @@ import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 
 public class SettingsActivity extends AppCompatActivity {
+    SharedPref sharedPref;
     private TextView textView;
     private Switch darkSwitch;
-
-    SharedPref sharedPref;
-
 
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);

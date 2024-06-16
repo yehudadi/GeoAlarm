@@ -5,9 +5,9 @@ import android.content.SharedPreferences;
 
 public class SharedPref {
 
-    private SharedPreferences sharedpref;
     public static final String SHARED_PREFS = "SHARED_PREFS";
     public static final String DARK_MODE = "DARK_MODE";
+    private SharedPreferences sharedpref;
 
     public SharedPref(Context context) {
         sharedpref = context.getSharedPreferences(SHARED_PREFS, Context.MODE_PRIVATE);
