@@ -134,31 +134,30 @@ public class AppService extends Service {
 
         locationFinder = locFinder;
         Thread tr = new Thread(() -> {
-            boolean hasArived = false;
 
             Intent distanceBroadcastIntent = new Intent("com.example.locationalarm.distance");
-//            Intent arrivalBroadcastIntent = new Intent("com.example.locationalarm.hasArrived");
+            Intent arrivalBroadcastIntent = new Intent("com.example.locationalarm.hasArrived");
 
 
-            int distance = 0;
+            int distance;
 
             while (!stopSelf) {
                 locationFinder.getLocation(); // saves new location in the LocationFinder object
+
                 distance = locationFinder.getDistanceFromUserToDestination();
                 String message;
 
 
+                message = "Distance: " + distance + " meters";
+
                 if (distanceAlert >= distance) {
+                    message += "\nYou are close to your destination.";
+
                     // Stop service
                     stopSelf = true;
-                    hasArived = true;
                     locationFinder.stopLocationUpdates();
 
-//                    arrivalBroadcastIntent.putExtra("hasArrived", true);
-//                    sendBroadcast(arrivalBroadcastIntent);
-                    message = "Distance: " + distance + " meters\nYou are close to your destination.";
-                } else {
-                    message = "Distance: " + distance + " meters";
+                    broadcastHasArrivedToActiveTracking(context, arrivalBroadcastIntent);
                 }
 
                 if (notificationActive) {
@@ -167,33 +166,32 @@ public class AppService extends Service {
                     showNotification(message);
                 }
 
+
                 distanceBroadcastIntent.putExtra("distance", distance);
-//                sendBroadcast(distanceBroadcastIntent);
+
                 LocalBroadcastManager.getInstance(context).sendBroadcast(distanceBroadcastIntent);
                 Log.d("debuging", "Distance from destination: " + distance + " meters");
 
-                // Sleep for 5 seconds
-                try {
-                    if (1000 >= distance)
-                        Thread.sleep(1500);
-                    else
-                        Thread.sleep(3000);
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                }
+                wait(1000 >= distance ? 1500 : 3000);
             }
-            // start alarm
-            if (hasArived) {
-                Toast.makeText(getApplicationContext(), "You have arrived", Toast.LENGTH_LONG).show();
-
-                Toast.makeText(context, "Play something!!", Toast.LENGTH_SHORT).show();
-            }
-
         });
 
         tr.setDaemon(true);
         tr.start();
         sleep();
+    }
+
+    private static void wait(int distance) {
+        try {
+            Thread.sleep(distance);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private static void broadcastHasArrivedToActiveTracking(Context context, Intent arrivalBroadcastIntent) {
+        arrivalBroadcastIntent.putExtra("hasArrived", true);
+        LocalBroadcastManager.getInstance(context).sendBroadcast(arrivalBroadcastIntent);
     }
 
     @Nullable
@@ -203,11 +201,7 @@ public class AppService extends Service {
     }
 
     private void sleep() {
-        try {
-            Thread.sleep(5000);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
+        wait(5000);
     }
 
 
@@ -225,13 +219,7 @@ public class AppService extends Service {
     }
 
     private void updateNotification(String newMessage) {
-        NotificationCompat.Builder builder = new NotificationCompat.Builder(this, NOTIFICATION_CHANNEL_ID)
-                .setContentTitle("Location Service")
-                .setContentText(newMessage)
-                .setSmallIcon(R.drawable.gsdafggg)
-                .setPriority(NotificationCompat.PRIORITY_HIGH)
-                .setOngoing(true)
-                .setAutoCancel(false);
+        NotificationCompat.Builder builder = new NotificationCompat.Builder(this, NOTIFICATION_CHANNEL_ID).setContentTitle("Location Service").setContentText(newMessage).setSmallIcon(R.drawable.gsdafggg).setPriority(NotificationCompat.PRIORITY_HIGH).setOngoing(true).setAutoCancel(false);
 
         Notification notification = builder.build();
 

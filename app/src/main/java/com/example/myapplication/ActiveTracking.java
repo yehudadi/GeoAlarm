@@ -1,6 +1,5 @@
 package com.example.myapplication;
 
-import android.annotation.SuppressLint;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
@@ -12,7 +11,6 @@ import android.widget.Button;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 
@@ -43,10 +41,8 @@ public class ActiveTracking extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.active_tracking_layout);
         Intent intent = getIntent();
-        // get extras and init variables
-        destination = intent.getStringExtra("name");
-        coordinates = intent.getStringExtra(MainActivity.COORDINATED_TAG);
-        distanceAlert = intent.getIntExtra("DISTANCE_TAG", 100);
+
+        extractIntentValues(intent);
 
         initViews();
         startTimeUpdater();
@@ -63,22 +59,28 @@ public class ActiveTracking extends AppCompatActivity {
         locationIntent.putExtra(MainActivity.DISTANCE_TAG, distanceAlert);
         startService(locationIntent);
     }
+
+    private void extractIntentValues(Intent intent) {
+        destination = intent.getStringExtra("name");
+        coordinates = intent.getStringExtra(MainActivity.COORDINATED_TAG);
+        distanceAlert = intent.getIntExtra("DISTANCE_TAG", 100);
+    }
+
     private void initViews() {
         destinationTextView = findViewById(R.id.locationName);
         distanceTextView = findViewById(R.id.selctedDistanceName);
         timeTextView = findViewById(R.id.timerText);
 
         destinationTextView.setText(destination);
-        distanceTextView.setText("100");
+        distanceTextView.setText("0");
         updateDistanceText(0);
         updateTimeText();
 
-        stopTracking = (Button) findViewById(R.id.stopTrackerBtn);
+        stopTracking = findViewById(R.id.stopTrackerBtn);
         stopTracking.setOnClickListener(v -> {
-            // stop the service
             timer.cancel();
             stopService(locationIntent);
-            // stop the activity
+
             finish();
         });
 
@@ -92,21 +94,27 @@ public class ActiveTracking extends AppCompatActivity {
     }
 
     public void initializeStopServicesBroadcast() {
-//        IntentFilter intentFilter = new IntentFilter("com.example.locationalarm.hasArrived");
-//        timeBroadcastReceiver = new BroadcastReceiver() {
-//            @Override
-//            public void onReceive(Context context, Intent intent) {
-//                timer.cancel();
-//                stopService(locationIntent);
-//                Toast.makeText(getApplicationContext(), "You have arrived", Toast.LENGTH_LONG).show();
-//                Context cont = getApplicationContext();
-//                arrived = true;
-//                finish();
-//            }
-//        };
-//        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-//            registerReceiver(timeBroadcastReceiver, intentFilter, Context.RECEIVER_NOT_EXPORTED);
-//        }
+        IntentFilter intentFilter = new IntentFilter("com.example.locationalarm.hasArrived");
+        timeBroadcastReceiver = new BroadcastReceiver() {
+            @Override
+            public void onReceive(Context context, Intent intent) {
+                timer.cancel();
+                stopService(locationIntent);
+
+                arrived = true;
+
+                playSound();
+
+                finish();
+            }
+        };
+        if (androidSupportPlaySound()) {
+            LocalBroadcastManager.getInstance(getApplicationContext()).registerReceiver(timeBroadcastReceiver, intentFilter);
+        }
+    }
+
+    private void playSound() {
+        startService(new Intent(this, MyAlarmService.class));
     }
 
     public void startTimeUpdater() {
@@ -126,14 +134,18 @@ public class ActiveTracking extends AppCompatActivity {
         distanceBroadcastReceiver = new BroadcastReceiver() {
             @Override
             public void onReceive(Context context, Intent intent) {
-                Log.d("debuging", "dist recieved: " + distance);
                 distance = intent.getIntExtra("distance", 0);
                 updateDistanceText(distance);
             }
         };
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+
+        if (androidSupportPlaySound()) {
             LocalBroadcastManager.getInstance(getApplicationContext()).registerReceiver(distanceBroadcastReceiver, intentFilter);
         }
+    }
+
+    private static boolean androidSupportPlaySound() {
+        return Build.VERSION.SDK_INT >= Build.VERSION_CODES.O;
     }
 
     public void updateDistanceText(int distance) {
